@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+
+.next-build/
+*.tsbuildinfo
+.claude/
+.vercel
+backend/public/

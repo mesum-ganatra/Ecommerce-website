@@ -1,0 +1,24 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.cjs": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/v1/cron/expire-payments",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

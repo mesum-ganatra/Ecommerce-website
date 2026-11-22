@@ -1,0 +1,137 @@
+@import 'tailwindcss';
+
+/* dark mode is switched by a "dark" class on <html> (next-themes) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Colours are CSS variables so that one set of class names (bg-slate-100, text-slate-600 ...) works in light and
+ * dark mode. In dark mode the grey scale is inverted: "slate-900" is the strongest text colour in both modes.
+ */
+@theme inline {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-inverse: var(--inverse);
+  --color-accent: var(--accent);
+
+  --color-slate-50: var(--s50);
+  --color-slate-100: var(--s100);
+  --color-slate-200: var(--s200);
+  --color-slate-300: var(--s300);
+  --color-slate-400: var(--s400);
+  --color-slate-500: var(--s500);
+  --color-slate-600: var(--s600);
+  --color-slate-700: var(--s700);
+  --color-slate-800: var(--s800);
+  --color-slate-900: var(--s900);
+
+  --color-brand-50: var(--b50);
+  --color-brand-100: var(--b100);
+  --color-brand-500: var(--b500);
+  --color-brand-600: var(--b600);
+  --color-brand-700: var(--b700);
+
+  --color-emerald-50: var(--g50);
+  --color-emerald-100: var(--g100);
+  --color-emerald-200: var(--g200);
+  --color-emerald-700: var(--g700);
+  --color-emerald-800: var(--g800);
+  --color-emerald-900: var(--g900);
+  --color-red-50: var(--r50);
+  --color-red-100: var(--r100);
+  --color-red-200: var(--r200);
+  --color-red-700: var(--r700);
+  --color-red-800: var(--r800);
+  --color-amber-50: var(--a50);
+  --color-amber-100: var(--a100);
+  --color-amber-200: var(--a200);
+  --color-amber-700: var(--a700);
+  --color-amber-800: var(--a800);
+  --color-amber-900: var(--a900);
+}
+
+:root {
+  color-scheme: light;
+  --canvas: #f5f6fa;
+  --surface: #ffffff;
+  --ink: #0f172a;
+  --inverse: #ffffff;
+  --accent: #4f46e5; /* a store's own colour overrides this on its storefront */
+
+  --s50: #f8fafc; --s100: #f1f5f9; --s200: #e2e8f0; --s300: #cbd5e1; --s400: #94a3b8;
+  --s500: #64748b; --s600: #475569; --s700: #334155; --s800: #1e293b; --s900: #0f172a;
+
+  --b50: #eef2ff; --b100: #e0e7ff; --b500: #6366f1; --b600: #4f46e5; --b700: #4338ca;
+
+  --g50: #ecfdf5; --g100: #d1fae5; --g200: #a7f3d0; --g700: #047857; --g800: #065f46; --g900: #064e3b;
+  --r50: #fef2f2; --r100: #fee2e2; --r200: #fecaca; --r700: #b91c1c; --r800: #991b1b;
+  --a50: #fffbeb; --a100: #fef3c7; --a200: #fde68a; --a700: #b45309; --a800: #92400e; --a900: #78350f;
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas: #0a0e1a;
+  --surface: #111827;
+  --ink: #f1f5f9;
+  --inverse: #0a0e1a;
+
+  --s50: #161e2e; --s100: #1b2438; --s200: #27324a; --s300: #36425e; --s400: #5f6b88;
+  --s500: #8792ad; --s600: #a8b2c8; --s700: #c5cddc; --s800: #dfe4ee; --s900: #f1f5f9;
+
+  --b50: #1a2145; --b100: #232c5e; --b500: #7c83ff; --b600: #6366f1; --b700: #a5b0ff;
+
+  --g50: #0d2a22; --g100: #11382d; --g200: #1b5a47; --g700: #6ee7b7; --g800: #a7f3d0; --g900: #d1fae5;
+  --r50: #2e1216; --r100: #3d171c; --r200: #6b2229; --r700: #fca5a5; --r800: #fecaca;
+  --a50: #2c2008; --a100: #3b2a0a; --a200: #5e4310; --a700: #fcd34d; --a800: #fde68a; --a900: #fef3c7;
+}
+
+html,
+body {
+  background: var(--canvas);
+  color: var(--s900);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+:focus-visible {
+  outline: 2px solid var(--b500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---------------------------------------------------------------- motion */
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-in-right { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+.animate-rise { animation: rise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.animate-fade { animation: fade 0.25s ease both; }
+.animate-pop { animation: pop 0.18s ease-out both; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--s100) 25%, var(--s200) 37%, var(--s100) 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* native <dialog> used for modals and side panels */
+dialog { color: inherit; }
+dialog::backdrop { background: rgb(2 6 23 / 0.55); backdrop-filter: blur(2px); animation: fade 0.2s ease both; }
+dialog[open].sheet { animation: slide-in-right 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+dialog[open].modal { animation: pop 0.18s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* thin, quiet scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--s300) transparent; }
