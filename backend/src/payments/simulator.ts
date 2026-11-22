@@ -15,7 +15,7 @@ export function simSign(fields: Record<string, string>): string {
 
 export const simulator: Adapter = {
   id: 'simulator',
-  label: 'Test gateway (development only)',
+  label: 'Online payment (demo, no real money)',
   verifiedAgainstOfficialGuide: true,
   credentialFields: [],
 

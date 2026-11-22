@@ -139,3 +139,11 @@ The admin panel and storefront were redesigned (light and dark mode, indigo plat
 - The API entry is the committed `backend/api/index.js`, which loads `dist/app.cjs` built by `npm run build:vercel`.
 - Production env vars live only in Vercel. Not yet set: S3 storage (so image/file uploads fail on Vercel), gateway sandbox credentials, the payment simulator is off.
 - CLI tips on Windows Git Bash: prefix `MSYS_NO_PATHCONV=1` for `vercel api /v9/...`; `vercel link` fails for the Next project (symlink EPERM), so the web project was created with `vercel project add` plus `vercel git connect`.
+
+## 12. Update: free "assignment" setup (2026-11-22)
+- Files now live in MongoDB (`STORAGE_DRIVER=mongo`, collection `blobs`, 4 MB per file). `/media/*` is served by the API and forwarded by the web app's rewrite. S3/R2 drivers still exist for a real launch.
+- Demo gateway: `ENABLE_PAYMENT_SIMULATOR=true` on Vercel, and a `simulator` PaymentConfig is enabled for each store. Labelled "Online payment (demo, no real money)". Turn both off for a real shop.
+- Home page lists stores (`/api/v1/directory`); `/<store>` and `/<store>/...` redirect to `/s/<store>/...`.
+- Cart no longer blocks digital products when the store has online payment.
+- Demo data (4 stores, 35 products) was created by a script through the API; product pictures are SVG tiles in `public/demo/`.
+- `catalog` test skips its disk checks when run with `STORAGE_DRIVER=mongo`.

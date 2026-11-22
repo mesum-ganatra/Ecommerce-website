@@ -25,7 +25,7 @@ export const env = {
   // Public address of this API (gateways send customers back here) and the storefront address pattern.
   apiPublicUrl: (process.env.API_PUBLIC_URL ?? 'http://localhost:4000').replace(/\/$/, ''),
   storefrontUrlTemplate: process.env.STOREFRONT_URL_TEMPLATE ?? 'http://{sub}.localhost:3000',
-  // The built-in test gateway is for development only. It must stay off in production.
+  // The built-in demo gateway moves no real money. Leave it off on a real shop; it is on for the university demo.
   paymentSimulator: process.env.ENABLE_PAYMENT_SIMULATOR ? process.env.ENABLE_PAYMENT_SIMULATOR === 'true' : (process.env.NODE_ENV ?? 'development') !== 'production',
   paymentExpiryMinutes: Number(process.env.PAYMENT_EXPIRY_MINUTES ?? 30),
   encryptionKey: process.env.ENCRYPTION_KEY ?? '',
