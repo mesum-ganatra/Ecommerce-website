@@ -68,7 +68,7 @@ export default function CartPage() {
             const problem = problemOf(l.sku);
             return (
               <li key={l.sku} className="flex gap-4 py-5">
-                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                   {l.image && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={mediaUrl(l.image)} alt="" className="h-full w-full object-cover" />
@@ -100,7 +100,7 @@ export default function CartPage() {
           })}
         </ul>
 
-        <aside className="h-fit rounded-3xl border border-slate-200 bg-slate-50 p-6" aria-label="Order summary">
+        <aside className="h-fit rounded-2xl border border-slate-200 bg-surface p-6 shadow-sm lg:sticky lg:top-28" aria-label="Order summary">
           <h2 className="text-lg font-semibold">Summary</h2>
           {!quote ? (
             <p className="mt-4 text-sm text-slate-500" role="status">{loading ? 'Checking prices…' : ''}</p>

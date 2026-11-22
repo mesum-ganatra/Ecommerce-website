@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { CreditCard, RotateCcw, Truck } from 'lucide-react';
 import { Gallery } from '@/components/shop/gallery';
 import { ProductBuy } from '@/components/shop/product-buy';
 import { mediaUrl } from '@/lib/api';
+import { rs } from '@/lib/format';
 import { shopBase } from '@/lib/shop-base';
-import { shopGet, type ShopProduct } from '@/lib/shop-api';
+import { shopGet, type ShopProduct, type ShopStore } from '@/lib/shop-api';
 
 type Props = { params: Promise<{ sub: string; slug: string }> };
 
@@ -23,9 +25,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { sub, slug } = await params;
-  const [r, base] = await Promise.all([shopGet<ShopProduct>(sub, `/products/${slug}`, 15), shopBase(sub)]);
+  const [r, base, store] = await Promise.all([shopGet<ShopProduct>(sub, `/products/${slug}`, 15), shopBase(sub), shopGet<ShopStore>(sub, '/store')]);
   if (!r.ok) notFound();
   const p = r.data;
+  const st = store.ok ? store.data : null;
+  const assurances = st && p.type === 'physical'
+    ? [
+        { icon: Truck, text: st.shipping.freeAbove ? `Free delivery on orders over ${rs(st.shipping.freeAbove)}` : 'Delivered to your door' },
+        { icon: CreditCard, text: st.cod.enabled ? 'Pay with cash on delivery' : 'Secure online payment' },
+        ...(st.returnWindowDays > 0 ? [{ icon: RotateCcw, text: `${st.returnWindowDays}-day returns` }] : []),
+      ]
+    : [];
 
   // structured data helps search engines show price and availability
   const jsonLd = {
@@ -63,6 +73,13 @@ export default async function ProductPage({ params }: Props) {
           <div className="mt-5">
             <ProductBuy variants={p.variants} digital={p.type === 'digital'} />
           </div>
+          {assurances.length > 0 && (
+            <ul className="mt-6 space-y-2.5 rounded-xl border border-slate-200 p-4 text-sm text-slate-700">
+              {assurances.map((a) => (
+                <li key={a.text} className="flex items-center gap-3"><a.icon size={18} className="shrink-0 text-slate-500" aria-hidden />{a.text}</li>
+              ))}
+            </ul>
+          )}
           {p.description && (
             <section aria-labelledby="desc" className="mt-8 border-t border-slate-200 pt-6">
               <h2 id="desc" className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Description</h2>

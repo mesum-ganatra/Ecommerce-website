@@ -142,7 +142,7 @@ export default function CheckoutPage() {
           )}
 
           <section aria-labelledby="contact" className="space-y-4">
-            <h2 id="contact" className="text-lg font-semibold">Contact</h2>
+            <h2 id="contact" className="flex items-center gap-3 text-lg font-semibold"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs font-bold text-inverse">1</span>Contact</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2"><Field label="Full name" error={err('customer.name')}><input required minLength={2} maxLength={80} autoComplete="name" className={shopInput} value={name} onChange={(e) => setName(e.target.value)} /></Field></div>
               <Field label="Phone" error={err('customer.phone')} hint="The courier or the store may call this number."><input required type="tel" inputMode="tel" autoComplete="tel" placeholder="0300 1234567" className={shopInput} value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
@@ -152,7 +152,7 @@ export default function CheckoutPage() {
 
           {quote?.hasPhysical && (
             <section aria-labelledby="address" className="space-y-4">
-              <h2 id="address" className="text-lg font-semibold">Delivery address</h2>
+              <h2 id="address" className="flex items-center gap-3 text-lg font-semibold"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs font-bold text-inverse">2</span>Delivery address</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2"><Field label="Address" error={err('shippingAddress.line1')}><input required minLength={3} maxLength={200} autoComplete="address-line1" placeholder="House, street, area" className={shopInput} value={line1} onChange={(e) => setLine1(e.target.value)} /></Field></div>
                 <div className="sm:col-span-2"><Field label="Apartment, landmark (optional)"><input maxLength={200} autoComplete="address-line2" className={shopInput} value={line2} onChange={(e) => setLine2(e.target.value)} /></Field></div>
@@ -164,7 +164,7 @@ export default function CheckoutPage() {
           )}
 
           <section aria-labelledby="pay" className="space-y-3">
-            <h2 id="pay" className="text-lg font-semibold">Payment</h2>
+            <h2 id="pay" className="flex items-center gap-3 text-lg font-semibold"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs font-bold text-inverse">{quote?.hasPhysical === false ? 2 : 3}</span>Payment</h2>
             {quote && methods.length === 0 && (
               <p role="status" className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 {quote.hasDigital ? 'This store has not switched on an online payment method yet, which digital products need.' : `No payment method is available for this order${store.cod.maxOrderAmount ? ` (Cash on Delivery limit ${rs(store.cod.maxOrderAmount)})` : ''}.`}
@@ -186,7 +186,7 @@ export default function CheckoutPage() {
           </section>
         </div>
 
-        <aside className="h-fit rounded-3xl border border-slate-200 bg-slate-50 p-6" aria-label="Order summary">
+        <aside className="h-fit rounded-2xl border border-slate-200 bg-surface p-6 shadow-sm lg:sticky lg:top-28" aria-label="Order summary">
           <h2 className="text-lg font-semibold">Your order</h2>
           {!quote ? <p className="mt-4 text-sm text-slate-500" role="status">Checking prices…</p> : (
             <>
