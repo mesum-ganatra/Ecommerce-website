@@ -3,6 +3,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import mongoose from 'mongoose';
 import '../config/env'; // loads backend/.env for local runs; on Vercel the variables come from the dashboard
 
 // File storage with two interchangeable drivers, chosen by STORAGE_DRIVER:
@@ -13,18 +14,47 @@ import '../config/env'; // loads backend/.env for local runs; on Vercel the vari
 //           bucket (signed upload), because a Vercel function accepts at most about 4.5 MB per request.
 
 const MB = 1024 * 1024;
-const driver = (): 'local' | 's3' => (process.env.STORAGE_DRIVER === 's3' ? 's3' : 'local');
+const driver = (): 'local' | 's3' | 'mongo' => (process.env.STORAGE_DRIVER === 's3' ? 's3' : process.env.STORAGE_DRIVER === 'mongo' ? 'mongo' : 'local');
 
 export const usesObjectStorage = () => driver() === 's3';
+/** Files kept inside MongoDB itself: free and needs no extra account, but each file is limited to 4 MB. */
+export const usesDatabaseStorage = () => driver() === 'mongo';
 /** Images pass through the API, which on Vercel accepts about 4.5 MB per request. */
 export const MAX_IMAGE_BYTES = 4 * MB;
-export const MAX_DIGITAL_BYTES = Number(process.env.MAX_DIGITAL_MB ?? (usesObjectStorage() ? 200 : 50)) * MB;
+export const MAX_DIGITAL_BYTES = Number(process.env.MAX_DIGITAL_MB ?? (usesObjectStorage() ? 200 : usesDatabaseStorage() ? 4 : 50)) * MB;
+
+// ---------------------------------------------------------------- database storage (driver "mongo")
+type Blob = { _id: mongoose.Types.ObjectId; kind: 'public' | 'private'; storeId: string; mime: string; size: number; data: Buffer };
+const blobs = () => mongoose.connection.collection<Blob>('blobs');
+const HEX24 = /^[a-f0-9]{24}$/;
+
+async function putBlob(kind: Blob['kind'], storeId: string, mime: string, data: Buffer) {
+  const _id = new mongoose.Types.ObjectId();
+  await blobs().insertOne({ _id, kind, storeId: safeSegmentOf(storeId), mime, size: data.length, data });
+  return _id.toHexString();
+}
+
+/** A stored picture for the /media route, or null. */
+export async function readPublicBlob(storeId: string, id: string) {
+  if (!HEX24.test(id)) return null;
+  const b = await blobs().findOne({ _id: new mongoose.Types.ObjectId(id), kind: 'public', storeId: safeSegmentOf(storeId) });
+  return b ? { mime: b.mime, data: Buffer.from(b.data.buffer) } : null;
+}
+
+/** A stored private file (a digital download), or null. */
+export async function readPrivateBlob(key: string) {
+  const id = key.split('/')[1] ?? '';
+  if (!HEX24.test(id)) return null;
+  const b = await blobs().findOne({ _id: new mongoose.Types.ObjectId(id), kind: 'private' });
+  return b ? { data: Buffer.from(b.data.buffer) } : null;
+}
 
 // ---------------------------------------------------------------- local paths
 const backendRoot = process.env.BACKEND_ROOT ?? process.cwd();
 export const PUBLIC_DIR = path.join(backendRoot, 'storage', 'public');
 const PRIVATE_DIR = path.join(backendRoot, 'storage', 'private');
 const safeSegment = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, '');
+const safeSegmentOf = safeSegment;
 
 // ---------------------------------------------------------------- S3
 let client: S3Client | undefined;
@@ -64,6 +94,7 @@ export function isAllowedImage(mime: string, buffer: Buffer): boolean {
 
 /** Returns the address to store on the product: "/media/..." locally, a full https address with S3. */
 export async function saveImage(storeId: string, mime: string, buffer: Buffer): Promise<string> {
+  if (usesDatabaseStorage()) return `/media/${safeSegment(storeId)}/${await putBlob('public', storeId, mime, buffer)}.${IMAGE_TYPES[mime].ext}`;
   const name = `${crypto.randomBytes(12).toString('hex')}.${IMAGE_TYPES[mime].ext}`;
   if (usesObjectStorage()) {
     const key = `${safeSegment(storeId)}/${name}`;
@@ -77,6 +108,11 @@ export async function saveImage(storeId: string, mime: string, buffer: Buffer): 
 }
 
 export async function deleteImage(url: string): Promise<void> {
+  if (usesDatabaseStorage()) {
+    const id = /^\/media\/[a-zA-Z0-9_-]+\/([a-f0-9]{24})\.[a-z]+$/.exec(url)?.[1];
+    if (id) await blobs().deleteOne({ _id: new mongoose.Types.ObjectId(id), kind: 'public' });
+    return;
+  }
   if (usesObjectStorage()) {
     if (!url.startsWith(`${publicBase()}/`)) return; // an external address: nothing of ours to delete
     const key = url.slice(publicBase().length + 1);
@@ -92,6 +128,7 @@ const KEY_RE = /^[a-zA-Z0-9_-]+\/[a-f0-9]+$/;
 
 /** Returns the storage key to keep on the product. */
 export async function savePrivate(storeId: string, buffer: Buffer): Promise<string> {
+  if (usesDatabaseStorage()) return `${safeSegment(storeId)}/${await putBlob('private', storeId, 'application/octet-stream', buffer)}`;
   const key = `${safeSegment(storeId)}/${crypto.randomBytes(16).toString('hex')}`; // random name; the real name stays in the database
   if (usesObjectStorage()) {
     await s3().send(new PutObjectCommand({ Bucket: privateBucket(), Key: key, Body: buffer }));
@@ -104,6 +141,11 @@ export async function savePrivate(storeId: string, buffer: Buffer): Promise<stri
 
 export async function deletePrivate(key: string): Promise<void> {
   if (!KEY_RE.test(key)) return;
+  if (usesDatabaseStorage()) {
+    const id = key.split('/')[1];
+    if (HEX24.test(id)) await blobs().deleteOne({ _id: new mongoose.Types.ObjectId(id), kind: 'private' });
+    return;
+  }
   if (usesObjectStorage()) return void (await s3().send(new DeleteObjectCommand({ Bucket: privateBucket(), Key: key })));
   await fs.rm(path.join(PRIVATE_DIR, key), { force: true });
 }
@@ -136,6 +178,11 @@ export async function presignPrivateUpload(storeId: string, contentType: string)
 export async function privateObjectSize(key: string): Promise<number | null> {
   if (!KEY_RE.test(key)) return null;
   try {
+    if (usesDatabaseStorage()) {
+      const id = key.split('/')[1];
+      if (!HEX24.test(id)) return null;
+      return (await blobs().findOne({ _id: new mongoose.Types.ObjectId(id), kind: 'private' }, { projection: { size: 1 } }))?.size ?? null;
+    }
     if (usesObjectStorage()) return (await s3().send(new HeadObjectCommand({ Bucket: privateBucket(), Key: key }))).ContentLength ?? null;
     return (await fs.stat(path.join(PRIVATE_DIR, key))).size;
   } catch {

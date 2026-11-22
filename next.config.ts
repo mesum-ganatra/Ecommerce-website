@@ -11,7 +11,13 @@ const nextConfig: NextConfig = {
   // lets a test build run beside a running dev server (NEXT_DIST_DIR=.next-build)
   distDir: process.env.NEXT_DIST_DIR || '.next',
   async rewrites() {
-    return API_PROXY_TARGET ? [{ source: '/api/v1/:path*', destination: `${API_PROXY_TARGET}/api/v1/:path*` }] : [];
+    return API_PROXY_TARGET
+      ? [
+          { source: '/api/v1/:path*', destination: `${API_PROXY_TARGET}/api/v1/:path*` },
+          // pictures uploaded through the API (stored in the database) are served by the API
+          { source: '/media/:path*', destination: `${API_PROXY_TARGET}/media/:path*` },
+        ]
+      : [];
   },
 };
 

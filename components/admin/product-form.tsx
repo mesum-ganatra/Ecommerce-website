@@ -200,7 +200,7 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
     if (!list) return;
     const picked = Array.from(list);
     setError('');
-    for (const f of picked) if (f.size > 50 * 1024 * 1024) return setError(`${f.name} is larger than 50 MB.`);
+    for (const f of picked) if (f.size > 4 * 1024 * 1024) return setError(`${f.name} is larger than 4 MB.`);
     if (!editing) {
       setQueuedFiles((prev) => [...prev, ...picked]);
       return;
@@ -407,7 +407,7 @@ export function ProductForm({ storeId, product }: { storeId: string; product?: P
           <label htmlFor="file-input" className={`inline-flex cursor-pointer items-center rounded-lg border border-slate-300 bg-surface px-3.5 py-2 text-sm font-medium hover:bg-slate-50 ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
             {uploading ? 'Uploading…' : 'Add a file'}
           </label>
-          <span className="ml-3 text-xs text-slate-500">Up to 50 MB each.</span>
+          <span className="ml-3 text-xs text-slate-500">Up to 4 MB each.</span>
           <div className="mt-5 grid max-w-lg gap-4 sm:grid-cols-2">
             <Field label="Download link valid for (days)" hint="Empty uses the store default."><Input type="number" min={1} max={3650} value={expiryDays} onChange={(e) => setExpiryDays(e.target.value)} /></Field>
             <Field label="Downloads allowed" hint="Empty uses the store default."><Input type="number" min={1} max={1000} value={downloadLimit} onChange={(e) => setDownloadLimit(e.target.value)} /></Field>

@@ -7,13 +7,14 @@ import { env } from './config/env';
 import { isReplicaSet } from './db/connect';
 import { authRouter } from './routes/auth';
 import { cronRouter } from './routes/cron';
+import { directoryRouter } from './routes/directory';
 import { connectDB } from './db/connect';
 import { catalogRouter } from './routes/catalog';
 import { ordersRouter } from './routes/orders';
 import { shopRouter } from './routes/shop';
 import { staffRouter } from './routes/staff';
 import { usersRouter } from './routes/users';
-import { PUBLIC_DIR, usesObjectStorage } from './services/storage';
+import { PUBLIC_DIR, readPublicBlob, usesDatabaseStorage, usesObjectStorage } from './services/storage';
 import { dashboardRouter } from './routes/dashboard';
 import { payPublicRouter, paymentConfigRouter } from './routes/payments';
 import { storesRouter } from './routes/stores';
@@ -62,7 +63,7 @@ export function createApp() {
   });
 
   // uploaded product images (public). Digital files live in private storage and are never served here.
-  if (!usesObjectStorage()) app.use(
+  if (!usesObjectStorage() && !usesDatabaseStorage()) app.use(
     '/media',
     express.static(PUBLIC_DIR, {
       maxAge: '7d',
@@ -84,6 +85,23 @@ export function createApp() {
     });
   }
 
+  // pictures kept in the database (STORAGE_DRIVER=mongo)
+  if (usesDatabaseStorage()) {
+    app.get('/media/:storeId/:file', async (req, res, next) => {
+      try {
+        const id = /^([a-f0-9]{24})\.[a-z]+$/.exec(String(req.params.file))?.[1];
+        const blob = id ? await readPublicBlob(String(req.params.storeId), id) : null;
+        if (!blob) return void res.status(404).end();
+        res.setHeader('Content-Type', blob.mime);
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.send(blob.data);
+      } catch (err) {
+        next(err);
+      }
+    });
+  }
+
   app.use('/api/v1/cron', cronRouter);
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1/stores', storesRouter);
@@ -93,6 +111,7 @@ export function createApp() {
   app.use('/api/v1/stores/:storeId', paymentConfigRouter);
   app.use('/api/v1/pay', payPublicRouter);
   app.use('/api/v1/users', usersRouter);
+  app.use('/api/v1/directory', directoryRouter);
   app.use('/api/v1/shop/:subdomain', shopRouter);
   app.use('/api/v1', dashboardRouter);
   // Next modules: catalogue, cart and checkout, orders, payments, connectors.

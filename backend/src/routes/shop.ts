@@ -7,7 +7,7 @@ import { Category, DownloadAccess, Order, Payment, PaymentConfig, Product, Shipm
 import { decryptCreds, gatewayIds, getAdapter } from '../payments';
 import { rateStore } from '../utils/rate-limit-store';
 import { maybeExpireStale } from '../services/payments';
-import { privateDownloadUrl, privatePath, usesObjectStorage } from '../services/storage';
+import { privateDownloadUrl, privatePath, readPrivateBlob, usesDatabaseStorage, usesObjectStorage } from '../services/storage';
 import { signDownloadToken, verifyDownloadToken } from '../utils/tokens';
 import { placeOrder, type PayMethod } from '../services/checkout';
 import { priceCart } from '../services/pricing';
@@ -363,6 +363,12 @@ shopRouter.get('/files/:token', trackLimiter, async (req, res) => {
   const product = await Product.findOne({ _id: a.productId, storeId: store._id }).select('digitalFiles').lean();
   const file = product?.digitalFiles.find((f) => String(f._id) === String(a.fileId));
   if (!file?.storageKey) throw notFound('File not found');
+  if (usesDatabaseStorage()) {
+    const blob = await readPrivateBlob(file.storageKey);
+    if (!blob) throw notFound('File not found');
+    res.attachment(file.name);
+    return void res.send(blob.data);
+  }
   if (usesObjectStorage()) return void res.redirect(302, await privateDownloadUrl(file.storageKey, file.name));
   res.download(privatePath(file.storageKey), file.name);
 });

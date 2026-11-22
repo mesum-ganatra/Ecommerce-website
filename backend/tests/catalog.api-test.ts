@@ -22,6 +22,8 @@ async function upload(p: string, token: string, field: string, filename: string,
   const res = await fetch(base + p, { method: 'POST', headers: { authorization: `Bearer ${token}` }, body: fd });
   return { status: res.status, json: (await res.json().catch(() => null)) as any };
 }
+// the disk checks only make sense for the local driver (run with STORAGE_DRIVER=mongo to test the database driver)
+const onDisk = !process.env.STORAGE_DRIVER || process.env.STORAGE_DRIVER === 'local';
 const MFA_SECRET = generateSecret();
 async function login(email: string, password: string) {
   const r = await call('POST', '/auth/login', undefined, { email, password });
@@ -103,13 +105,13 @@ try {
   r = await upload(`/stores/${sid}/products/${did}/files`, inv, 'file', 'recipes.pdf', 'application/pdf', Buffer.from('%PDF-1.4 test content')); check('upload digital file', r.status === 201 && r.json.name === 'recipes.pdf', JSON.stringify(r.json));
   const fid = r.json?._id;
   r = await call('GET', `/stores/${sid}/products/${did}`, sup); check('storage key never exposed to the browser', !JSON.stringify(r.json).includes('storageKey') && r.json.digitalFiles.length === 1, JSON.stringify(r.json.digitalFiles));
-  const privFiles = fs.readdirSync(path.join('storage', 'private', sid)); check('file kept in private storage under a random name', privFiles.length === 1 && !privFiles[0].includes('recipes'), privFiles.join());
-  const direct = await fetch(`${API}/media/${sid}/${privFiles[0]}`); check('private file is not reachable through /media', direct.status === 404, direct.status + '');
+  const privFiles = onDisk ? fs.readdirSync(path.join('storage', 'private', sid)) : ['x']; if (onDisk) check('file kept in private storage under a random name', privFiles.length === 1 && !privFiles[0].includes('recipes'), privFiles.join());
+  const direct = await fetch(`${API}/media/${sid}/${onDisk ? privFiles[0] : 'a'.repeat(24)}`); check('private file is not reachable through /media', direct.status === 404, direct.status + '');
   r = await call('PATCH', `/stores/${sid}/products/${did}`, inv, { status: 'active' }); check('digital can go active once it has a file', r.status === 200 && r.json.status === 'active', JSON.stringify(r.json).slice(0, 150));
   r = await call('DELETE', `/stores/${sid}/products/${did}/files/${fid}`, inv); check('cannot remove the last file of an active product', r.status === 400, r.status + '');
   r = await call('POST', `/stores/${sid}/products/${did}/stock`, inv, { sku: 'EB-1', delta: 1, reason: 'restock' }); check('digital products have no stock', r.status === 400, r.status + '');
   await call('PATCH', `/stores/${sid}/products/${did}`, inv, { status: 'draft' }); r = await call('DELETE', `/stores/${sid}/products/${did}/files/${fid}`, inv); check('file removed from a draft', r.status === 200, r.status + '');
-  check('private file deleted from disk', fs.readdirSync(path.join('storage', 'private', sid)).length === 0);
+  if (onDisk) check('private file deleted from disk', fs.readdirSync(path.join('storage', 'private', sid)).length === 0);
 
   // ---- archive + category rules
   r = await call('DELETE', `/stores/${sid}/products/${pid}`, inv); check('archive product', r.status === 200);

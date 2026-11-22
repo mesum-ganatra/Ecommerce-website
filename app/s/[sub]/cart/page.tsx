@@ -118,9 +118,9 @@ export default function CartPage() {
               <p className="text-sm text-red-700">Some items need your attention before you can check out.</p>
               <button type="button" className={`${shopButton} w-full`} onClick={fixBasket}>Update my basket</button>
             </div>
-          ) : quote?.hasDigital ? (
+          ) : quote?.hasDigital && quote.paymentOptions.online.length === 0 ? (
             <div className="mt-5 space-y-2">
-              <p role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">Digital products need online payment, which is not available yet. Remove them to pay on delivery.</p>
+              <p role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">Digital products need online payment, and this store has not switched it on yet.</p>
               <span className={`${shopButton} w-full cursor-not-allowed opacity-50`} aria-disabled>Checkout</span>
             </div>
           ) : (
