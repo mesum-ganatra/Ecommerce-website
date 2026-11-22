@@ -131,3 +131,11 @@ The admin panel and storefront were redesigned (light and dark mode, indigo plat
 - Frontend: `NEXT_DIST_DIR` lets a production build run beside the dev server; the unused `lib/db/mongodb.ts` and `mongodb` package are gone; `.env.example` lists `API_URL`.
 - Verified locally: the bundle serves health/shop/cron, the four API suites pass (47/64/74/63), `next build` succeeds. NOT verified: a real Vercel deployment, S3/R2 uploads (no bucket yet), wildcard DNS.
 - Steps: see `DEPLOY.md`.
+
+## 11. Update: live on Vercel (2026-11-22)
+- Web: https://ecomm-web-hazel.vercel.app (admin at /admin). API: https://ecomm-api-steel.vercel.app. Vercel team `mesum4`, projects `ecomm-web` (repo root) and `ecomm-api` (root `backend`), both auto-deploy from `main` of github.com/mesum-ganatra/Ecommerce-website.
+- No custom domain, so stores open by path: `/s/<subdomain>` (`NEXT_PUBLIC_STORE_PATHS=true`, `STOREFRONT_URL_TEMPLATE=https://<web>/s/{sub}`). Real subdomains need a bought domain and Vercel nameservers (see DEPLOY.md), then unset `NEXT_PUBLIC_STORE_PATHS`.
+- The browser calls the API through the web app (`/api/v1` rewrite, `API_PROXY_TARGET`) so the sign-in cookie stays on one site. Server pages call the API directly (`API_URL`).
+- The API entry is the committed `backend/api/index.js`, which loads `dist/app.cjs` built by `npm run build:vercel`.
+- Production env vars live only in Vercel. Not yet set: S3 storage (so image/file uploads fail on Vercel), gateway sandbox credentials, the payment simulator is off.
+- CLI tips on Windows Git Bash: prefix `MSYS_NO_PATHCONV=1` for `vercel api /v9/...`; `vercel link` fails for the Next project (symlink EPERM), so the web project was created with `vercel project add` plus `vercel git connect`.
