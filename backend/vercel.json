@@ -5,7 +5,7 @@
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "public",
   "functions": {
-    "api/index.cjs": {
+    "api/index.js": {
       "maxDuration": 30
     }
   },
