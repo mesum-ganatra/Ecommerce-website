@@ -5,6 +5,11 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000
 export const API_ORIGIN = API_URL.replace(/\/api\/v1\/?$/, '');
 export const mediaUrl = (u: string) => (u.startsWith('/media/') ? API_ORIGIN + u : u);
 export const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? 'localhost:3000';
+// Without your own domain (e.g. on *.vercel.app) stores cannot have subdomains, so they are opened as <domain>/s/<name>.
+export const PATH_STORES = process.env.NEXT_PUBLIC_STORE_PATHS === 'true';
+/** Short text shown for a store's address, e.g. kababjess.shop.com or shop.vercel.app/s/kababjess */
+export const storeAddress = (sub: string) => (PATH_STORES ? `${PLATFORM_DOMAIN}/s/${sub}` : `${sub}.${PLATFORM_DOMAIN}`);
+export const storeUrl = (sub: string) => `${PLATFORM_DOMAIN.startsWith('localhost') ? 'http' : 'https'}://${storeAddress(sub)}`;
 
 export class ApiError extends Error {
   constructor(

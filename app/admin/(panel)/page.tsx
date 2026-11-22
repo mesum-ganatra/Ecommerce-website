@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { AnalyticsView } from '@/components/admin/analytics-view';
 import { CountUp } from '@/components/admin/charts';
 import { Alert, Badge, Button, Card, EmptyState, Loading, PageHeader, Skeleton, formatDate, statusTone } from '@/components/admin/ui';
-import { ApiError, PLATFORM_DOMAIN, get } from '@/lib/api';
+import { ApiError, get, storeAddress } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import type { AuditRow, DashboardData, Page, StoreSummary } from '@/lib/types';
 
@@ -104,7 +104,7 @@ function StaffDashboard() {
             <Badge tone={statusTone(s.status)}>{s.status}</Badge>
           </div>
           <div className="mt-4 font-semibold group-hover:text-brand-700">{s.name}</div>
-          <div className="text-xs text-slate-500">{s.subdomain}.{PLATFORM_DOMAIN}</div>
+          <div className="text-xs text-slate-500">{storeAddress(s.subdomain)}</div>
         </Link>
       ))}
     </div>

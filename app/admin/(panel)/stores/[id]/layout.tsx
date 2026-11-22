@@ -5,7 +5,7 @@ import { useParams, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StoreContext } from '@/components/admin/store-context';
 import { Alert, Badge, Button, ConfirmButton, Loading, PageHeader, formatDate, statusTone } from '@/components/admin/ui';
-import { ApiError, PLATFORM_DOMAIN, get, post } from '@/lib/api';
+import { ApiError, get, post, storeAddress, storeUrl } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import type { Store } from '@/lib/types';
 
@@ -55,7 +55,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
 
   const base = `/admin/stores/${store._id}`;
   // the store's own address; .localhost names open directly in modern browsers during development
-  const storefrontUrl = `${PLATFORM_DOMAIN.startsWith('localhost') ? 'http' : 'https'}://${store.subdomain}.${PLATFORM_DOMAIN}`;
+  const storefrontUrl = storeUrl(store.subdomain);
   const tabs = [
     ...(can('report.view') ? [{ href: `${base}/overview`, label: 'Overview' }] : []),
     { href: base, label: 'Settings', exact: true },
@@ -74,7 +74,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       </div>
       <PageHeader
         title={store.name}
-        subtitle={<a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{store.subdomain}.{PLATFORM_DOMAIN} ↗</a>}
+        subtitle={<a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{storeAddress(store.subdomain)} ↗</a>}
         action={
           isSuper && store.status !== 'archived' ? (
             <div className="flex flex-wrap gap-2">

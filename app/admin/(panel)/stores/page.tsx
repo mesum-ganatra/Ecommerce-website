@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Input, Loading, PageHeader, Select, formatDate, statusTone } from '@/components/admin/ui';
-import { ApiError, PLATFORM_DOMAIN, get } from '@/lib/api';
+import { ApiError, get, storeAddress } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import type { Page, StoreSummary } from '@/lib/types';
 
@@ -101,7 +101,7 @@ export default function StoresPage() {
                   <tr key={s._id} className="hover:bg-slate-50">
                     <td className="px-5 py-3">
                       <Link href={`/admin/stores/${s._id}`} className="font-medium text-brand-700 hover:underline">{s.name}</Link>
-                      <div className="text-xs text-slate-500">{s.subdomain}.{PLATFORM_DOMAIN}</div>
+                      <div className="text-xs text-slate-500">{storeAddress(s.subdomain)}</div>
                     </td>
                     <td className="px-3 py-3">
                       <Badge tone={s.type === 'native' ? 'info' : 'neutral'}>{s.type}</Badge>

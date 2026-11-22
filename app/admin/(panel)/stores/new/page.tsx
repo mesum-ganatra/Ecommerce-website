@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Alert, Button, Card, Field, Input, PageHeader, Select } from '@/components/admin/ui';
-import { ApiError, PLATFORM_DOMAIN, post } from '@/lib/api';
+import { ApiError, PATH_STORES, PLATFORM_DOMAIN, post, storeAddress } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import type { Store } from '@/lib/types';
 
@@ -86,7 +86,7 @@ export default function NewStorePage() {
                 placeholder="kababjess"
                 pattern="[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?"
               />
-              <span className="whitespace-nowrap text-sm text-slate-500">.{PLATFORM_DOMAIN}</span>
+              <span className="whitespace-nowrap text-sm text-slate-500">{PATH_STORES ? `← ${storeAddress(subdomain || 'name')}` : `.${PLATFORM_DOMAIN}`}</span>
             </div>
           </Field>
 
