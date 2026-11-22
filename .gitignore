@@ -9,3 +9,5 @@ out/
 .claude/
 .vercel
 backend/public/
+
+.vercel

@@ -8,3 +8,6 @@ dist/
 api/
 !.env.production.example
 .vercel
+
+.vercel
+.env*
